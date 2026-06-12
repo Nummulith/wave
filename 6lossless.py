@@ -3,7 +3,6 @@ from scipy.io import wavfile
 from wave_lib import *
 
 file_name = 'dist_bass'
-
 sou_name = f"source/{file_name}.wav"
 
 source = Wave()

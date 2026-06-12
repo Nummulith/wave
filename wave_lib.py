@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.io import wavfile
+from scipy.signal import resample
 
 class Wave:
     def load_wav(self, file_name):
@@ -54,9 +55,24 @@ class Wave:
             self.data_float[:, ch] = np.fft.ifft(fft_complex).real
 
     def save_wav(self, file_name):
-        data = np.round(self.data_float).astype(self.dtype) # Округляем и возвращаем исходный тип данных
-
+        data = self.data_float
+        data = (data / np.max(np.abs(data))) * 32767
+        data = np.round(data)
+        data = data.astype(self.dtype) # Округляем и возвращаем исходный тип данных
         if self.num_channels == 1: # Если был моно, убираем лишнюю ось
             data = data[:, 0]
 
         wavfile.write(file_name, self.sample_rate, data)
+
+    def resample(self, semitones):
+        """
+        Сдвиг высоты звука через ресемплинг.
+        semitones: число полутонов (+ вверх, - вниз)
+        """
+        ratio = 2 ** (semitones / 12.0)  # множитель частоты
+        new_length = int(len(self.data_float) / ratio)  # пересчёт длины
+
+        resampled = []
+        for ch in range(self.data_float.shape[1]):
+            resampled.append(resample(self.data_float[:, ch], new_length))
+        self.data_float = np.array(resampled).T  # Транспонируем обратно
